@@ -1,5 +1,5 @@
+using System.Collections.Concurrent;
 using Microsoft.Playwright;
-using System;
 
 namespace NovelUpdates.Scrapper
 {
@@ -10,58 +10,23 @@ namespace NovelUpdates.Scrapper
         {
             Console.WriteLine("Page loaded!");
             var titleBoxes = p.Locator("div.search_main_box_nu");
-            var titleCount = await titleBoxes.CountAsync();
-            Console.WriteLine($"Total titleBoxes {titleCount}");
 
-            await titleBoxes.ForEachRow(async it =>
+            var titleBoxCount = await titleBoxes.CountAsync();
+            for(int i = 0; i < titleBoxCount; i++)
             {
+                var titleAnchor = titleBoxes.Nth(i).Locator("div.search_body_nu > div.search_title > a");
+                var tags = titleBoxes.Nth(i).Locator("div.search_body_nu > div.search_genre > a");
+                var tagsCount = await tags.CountAsync();
 
-                var titleBoxText = await it.TextContentAsync();
-                var titleBoxHtml = await it.InnerHTMLAsync();
-
-                Console.WriteLine("-----TextContent-----");
-                Console.WriteLine(titleBoxText);
-                Console.WriteLine("-----InnetHTMLContent-----");
-                Console.WriteLine(titleBoxHtml);
-                Console.WriteLine("-----Tags-----");
-
-                var tags = it.Locator("div.search_body_nu>div.search_genre>a");
                 var tagsText = "";
-                await tags.ForEachRow(async tag =>
+                for (int tagIndex = 0; tagIndex < tagsCount; tagIndex++)
                 {
-                    var oneTag = await tag.TextContentAsync();
-                    tagsText = tagsText + oneTag + " ";
-                });
-                Console.WriteLine(tagsText);
+                    tagsText += $"{await tags.Nth(tagIndex).TextContentAsync()} ";
+                }
 
-            });
-            // for (int i = 0; i < titleCount; i++)
-            // {
-            //     var titleBoxText = await titleBoxes.Nth(i).TextContentAsync();
-            //     var titleBoxHtml = await titleBoxes.Nth(i).InnerHTMLAsync();
-
-            //     var tags = titleBoxes.Nth(i).Locator("div.search_body_nu>div.search_genre>a");
-            //     var tagsCount = await tags.CountAsync();
-            //     var tagsText = await tags.TextContentAsync();
-
-            //     Console.WriteLine(tagsCount);
-
-            //     Console.WriteLine(titleBoxText);
-            //     Console.WriteLine("--------------");
-            //     Console.WriteLine(titleBoxHtml);
-
-            // }
-        }
-        public static async Task ForEachRow(this ILocator locator, Action<ILocator> action)
-        {
-            var count = await locator.CountAsync();
-            for (int i = 0; i < count; i++)
-            {
-                action(locator.Nth(i));
+                var titleAnchorText = await titleAnchor.TextContentAsync();
+                Console.WriteLine($"Title: {titleAnchorText} - Tags: {tagsText}");
             }
-
         }
     }
-
-
 }
